@@ -28,7 +28,7 @@ import json_parser
 example = {"foo": True, "bar": None, "list": [1, 2, 3]}
 print(json_parser.dumps(example))
 
-# convert a Python dictionary into a json-formatted string
+# convert a json-formatted string into a python object
 json = '''{
     "list": [1, 2, 3], 
     "bool": true, 
