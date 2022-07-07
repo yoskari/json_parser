@@ -1,0 +1,13 @@
+[package]
+name = "json_parser"
+version = "0.1.0"
+edition = "2021"
+authors = ["Oskari Ylönen <yoskari@iki.fi>"]
+
+[lib]
+name = "json_parser"
+crate-type = ["cdylib"]
+
+[dependencies.cpython]
+version = "*"
+features = ["extension-module"]
