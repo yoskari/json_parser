@@ -6,6 +6,7 @@ j = r'''{
     "false": false,
     "float": 1.11, 
     "number": -123, 
+    "scientific notation": 6.02e23,
     "unicode": "Слава Украине",
     "null": null,
     "dict": {

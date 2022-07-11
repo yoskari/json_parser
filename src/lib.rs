@@ -22,12 +22,6 @@ use std::{
     borrow::Borrow,
 };
 
-const NUMERIC: [char; 12] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '-'];
-
-const BOOLCHARS: [char; 8] = ['t', 'r', 'u', 'e', 'f', 'a', 's', 'e'];
-
-const NULLCHARS: [char; 3] = ['n', 'u', 'l'];
-
 #[derive(Clone, Debug)]
 enum Json {
     Null,
@@ -80,14 +74,18 @@ fn string_to_json(s: String) -> Json {
     {
         let item: Json;
         //let key: Option<String>;
+        let trimmed = buffer.trim();
         if current_type == &1 {
-            item = Json::Number(buffer.parse::<f64>().unwrap());
-        } else if current_type == &2 {
-            item = Json::Bool(buffer.parse::<bool>().unwrap());
-        } else if current_type == &3 {
-            item = Json::Null;
+            //println!("'{}'", trimmed);
+            if trimmed == "null" {
+                item = Json::Null;
+            } else if trimmed == "false" || trimmed == "true" {
+                item = Json::Bool(trimmed.parse::<bool>().unwrap());
+            } else {
+                item = Json::Number(trimmed.parse::<f64>().unwrap());
+            }
         } else {
-            item = Json::String(buffer.clone());
+            item = Json::String(trimmed.to_string());
         }
         match stack.last().unwrap() {
             Json::Array(_) => {
@@ -106,14 +104,13 @@ fn string_to_json(s: String) -> Json {
         buffer.clear();
         *current_type = 0;
     }
-    //println!("{}", s);
     let mut stack = Vec::<Json>::new();
     let mut key_stack = Vec::<String>::new();
     let mut buffer = String::new();
 
     let mut last_value = Json::Null;
     let mut recording = false;
-    let mut current_type = 0; // 0 = everything else, 1 = numeric, 2 = boolean, 3 = null
+    let mut current_type = 0; // 0 = string, 1 = something else
 
     for c in s.chars() {
         match c {
@@ -133,6 +130,9 @@ fn string_to_json(s: String) -> Json {
                 add_to_previous(&mut stack, key_stack.pop(), item);
             },
             '"' => {
+                if recording == false {
+                    buffer.clear();
+                }
                 recording = !recording;
                 continue;
             },
@@ -144,19 +144,14 @@ fn string_to_json(s: String) -> Json {
                 flush_buffer(&mut stack, &mut buffer, &mut current_type, &mut key_stack);
             },
             t => {
-                if NUMERIC.contains(&t) && recording == false {
+                if recording == false {
                     buffer.push(t);
                     current_type = 1;
-                } else if BOOLCHARS.contains(&t) && recording == false {
-                    buffer.push(t);
-                    current_type = 2;
-                } else if NULLCHARS.contains(&t) && recording == false {
-                    buffer.push(t);
-                    current_type = 3;
                 }
             },
         }
         if recording {
+            current_type = 0;
             buffer.push(c);
         }
     }
@@ -172,7 +167,12 @@ fn json_to_python(json: Json, py: Python) -> PyObject {
             PyBool::get(py, value).into_object()
         },
         Json::Number(value) => {
-            value.to_py_object(py).into_object()
+            if value.fract() == 0.0 {
+                let value = value as i64;
+                value.to_py_object(py).into_object()
+            } else {
+                value.to_py_object(py).into_object()
+            }
         },
         Json::String(value) => {
             value.to_py_object(py).into_object()
