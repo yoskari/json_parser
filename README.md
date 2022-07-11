@@ -37,8 +37,9 @@ json = '''{
     "number": -123, 
     "unicode": "Слава Украине",
     "null": null,
+    "scientific notation": 6.02e23,
     "dict": {
-        "foo": "bar\041\u2b78\n", 
+        "foo": "bar", 
         "list": [
             3, 2, 1
         ]
